@@ -1,6 +1,5 @@
 package com.martin.ads.vrlib;
 
-import android.app.Activity;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -8,24 +7,17 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Message;
 import android.util.Log;
-import android.view.Surface;
 
 import com.martin.ads.vrlib.constant.Constants;
-import com.martin.ads.vrlib.constant.PanoStatus;
 import com.martin.ads.vrlib.database.HistoryFrame;
 import com.martin.ads.vrlib.database.MyDataBase;
 import com.martin.ads.vrlib.ui.PanoPlayerActivity;
-import com.martin.ads.vrlib.utils.SensorUtils;
 import com.martin.ads.vrlib.utils.StatusHelper;
 
-import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
 
 import static com.martin.ads.vrlib.database.HistoryFrame.mList;
-import static com.martin.ads.vrlib.ui.PanoPlayerActivity.mHandler;
 
 /**
  * Project: Pano360
@@ -38,12 +30,16 @@ public class SensorEventHandler implements SensorEventListener {
     private Message msg = new Message();
 
     private float[] rotationMatrix = new float[16];
-    private static float[] Temp = new float[16];
+    private static double[] Temp = new double[16];
     private Timer timer =new Timer();
     private TimerTask timerTask = new TimerTask() {
         @Override
         public void run() {
-            Temp = rotationMatrix;
+            Temp = new double[]{-0.712158154912234, -0.497834546510341, 0.494966187423792, 0.0, 0.528497905120719, -0.844280701036809, -0.0887697140910368, 0.0, 0.46208303006604 , 0.198370517359904, 0.86436590120582, 0.0, 0.0, 0.0, 0.0, 1.0};
+            for(int i= 0; i < Temp.length; i++){
+                rotationMatrix[i] = (float)Temp[i];
+            }
+            sensorHandlerCallback.updateSensorMatrix(rotationMatrix);
         }
     };
     //private float[] orientationData=new float[3];
@@ -76,7 +72,7 @@ public class SensorEventHandler implements SensorEventListener {
         sensorRegistered=true;
 
 //        initMyDataBase();
-        timer.schedule(timerTask,0,500);
+        timer.schedule(timerTask,0,30);
     }
 
     public void releaseResources(){
@@ -123,54 +119,54 @@ public class SensorEventHandler implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (event.accuracy != 0){
-            int type = event.sensor.getType();
-            switch (type){
-                case Constants.SENSOR_ROT:
-                    //FIXME
-                    mDeviceRotation= ((Activity)statusHelper.getContext()).getWindowManager().getDefaultDisplay().getRotation();
-                    SensorUtils.sensorRotationVectorToMatrix(event,mDeviceRotation,rotationMatrix);
-
-
-//                    mHistoryFrame.historyFrame = rotationMatrix;
-//                    mList.add(mHistoryFrame);
-//                    Log.i("Length",String.valueOf(mHistoryFrame.historyFrame[0]));
-//                    if((!Arrays.equals(mList.removeFirst().historyFrame, zero))){
-//                        Log.i("Arr","full");
-                        //如果链表第一个是空，则不启用暂停功能直到链表被装满
-                        if(PauseFun(Temp,rotationMatrix) && a && !statusHelper.getPanoPauseChangeMode()){
-//                            Log.i("Arr",String.valueOf(PauseFun()));
-                            myDataBase.delet();
-                            myDataBase.insert(rotationMatrix);
-                            temp = myDataBase.query(1);
-                            a = false;
-                            sensorHandlerCallback.updateSensorMatrix(temp);
-                            mHandler.sendEmptyMessage(0);
-
-                            break;
-                        }else if(a){
-                            sensorHandlerCallback.updateSensorMatrix(rotationMatrix);
-                            break;
-                        }else if(statusHelper.getPanoPauseChangeMode()){
-                            sensorHandlerCallback.updateSensorMatrix(rotationMatrix);
-                            statusHelper.setPanoPauseChangeMode(false);
-                            mHandler.sendEmptyMessage(1);
-                            a = true;
-                            break;
-                        }else {
-                            sensorHandlerCallback.updateSensorMatrix(temp);
-                            break;
-                        }
-//                    }else {
-//                        sensorHandlerCallback.updateSensorMatrix(rotationMatrix);
-//                        break;
-//                    }
-
+//        if (event.accuracy != 0){
+//            int type = event.sensor.getType();
+//            switch (type){
+//                case Constants.SENSOR_ROT:
+//                    //FIXME
+//                    mDeviceRotation= ((Activity)statusHelper.getContext()).getWindowManager().getDefaultDisplay().getRotation();
+//                    SensorUtils.sensorRotationVectorToMatrix(event,mDeviceRotation,rotationMatrix);
 //
-//                    sensorHandlerCallback.updateSensorMatrix(rotationMatrix);
-//                break;
-            }
-        }
+//
+////                    mHistoryFrame.historyFrame = rotationMatrix;
+////                    mList.add(mHistoryFrame);
+////                    Log.i("Length",String.valueOf(mHistoryFrame.historyFrame[0]));
+////                    if((!Arrays.equals(mList.removeFirst().historyFrame, zero))){
+////                        Log.i("Arr","full");
+//                        //如果链表第一个是空，则不启用暂停功能直到链表被装满
+//                        if(PauseFun(Temp,rotationMatrix) && a && !statusHelper.getPanoPauseChangeMode()){
+////                            Log.i("Arr",String.valueOf(PauseFun()));
+//                            myDataBase.delet();
+//                            myDataBase.insert(rotationMatrix);
+//                            temp = myDataBase.query(1);
+//                            a = false;
+//                            sensorHandlerCallback.updateSensorMatrix(temp);
+//                            mHandler.sendEmptyMessage(0);
+//
+//                            break;
+//                        }else if(a){
+//                            sensorHandlerCallback.updateSensorMatrix(rotationMatrix);
+//                            break;
+//                        }else if(statusHelper.getPanoPauseChangeMode()){
+//                            sensorHandlerCallback.updateSensorMatrix(rotationMatrix);
+//                            statusHelper.setPanoPauseChangeMode(false);
+//                            mHandler.sendEmptyMessage(1);
+//                            a = true;
+//                            break;
+//                        }else {
+//                            sensorHandlerCallback.updateSensorMatrix(temp);
+//                            break;
+//                        }
+////                    }else {
+////                        sensorHandlerCallback.updateSensorMatrix(rotationMatrix);
+////                        break;
+////                    }
+//
+////
+////                    sensorHandlerCallback.updateSensorMatrix(rotationMatrix);
+////                break;
+//            }
+//        }
     }
 
     @Override
