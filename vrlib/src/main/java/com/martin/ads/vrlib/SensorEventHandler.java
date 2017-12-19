@@ -5,6 +5,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Environment;
 import android.os.Message;
 import android.util.Log;
 
@@ -14,6 +15,8 @@ import com.martin.ads.vrlib.database.MyDataBase;
 import com.martin.ads.vrlib.ui.PanoPlayerActivity;
 import com.martin.ads.vrlib.utils.StatusHelper;
 
+import java.io.FileInputStream;
+import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -31,14 +34,30 @@ public class SensorEventHandler implements SensorEventListener {
 
     private float[] rotationMatrix = new float[16];
     private static double[] Temp = new double[16];
+    public FileInputStream fileInputStream;
+    public Scanner in;
+//    public ArrayList<float[]> vp_data = new ArrayList<>();
+//    public int time = 0 ;
     private Timer timer =new Timer();
     private TimerTask timerTask = new TimerTask() {
         @Override
         public void run() {
-            Temp = new double[]{-0.712158154912234, -0.497834546510341, 0.494966187423792, 0.0, 0.528497905120719, -0.844280701036809, -0.0887697140910368, 0.0, 0.46208303006604 , 0.198370517359904, 0.86436590120582, 0.0, 0.0, 0.0, 0.0, 1.0};
-            for(int i= 0; i < Temp.length; i++){
-                rotationMatrix[i] = (float)Temp[i];
+//            Temp = new double[]{-0.712158154912234, -0.497834546510341, 0.494966187423792, 0.0, 0.528497905120719, -0.844280701036809, -0.0887697140910368, 0.0, 0.46208303006604 , 0.198370517359904, 0.86436590120582, 0.0, 0.0, 0.0, 0.0, 1.0};
+//            for(int i= 0; i < Temp.length; i++){
+//                rotationMatrix[i] = (float)Temp[i];
+//            }
+//            rotationMatrix = readCSV("mdata.csv").get(time);
+//            time++;
+            in.nextLine();
+            if (in.hasNextLine()) {
+                String[] lines = in.nextLine().split(",");
+                for(int i=0;i<16;i++){
+                    rotationMatrix[i] = Float.parseFloat(lines[i]);
+                }
+//                sensorHandlerCallback.updateSensorMatrix(rotationMatrix);
+
             }
+
             sensorHandlerCallback.updateSensorMatrix(rotationMatrix);
         }
     };
@@ -62,6 +81,30 @@ public class SensorEventHandler implements SensorEventListener {
 
     private int mDeviceRotation;
 
+//    private ArrayList<float[]> readCSV(String path) {
+//        ArrayList<float[]> viewport_data = new ArrayList<>();
+//        FileInputStream fileInputStream;
+//        Scanner in;
+//        try {
+//            fileInputStream = new FileInputStream(Environment.getExternalStorageDirectory().getCanonicalPath() + "/" + path);
+//            //一定要声明为GBK编码,因为默认编码为GBK
+//            in = new Scanner(fileInputStream);
+//            //舍弃第一行
+//            while (in.hasNextLine()) {
+//                String[] lines = in.nextLine().split(",");
+//                float[] view = new float[16];
+//                for(int i=0;i<16;i++){
+//                    view[i] = Float.parseFloat(lines[i]);
+//                }
+//                viewport_data.add(view);
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        Log.v(TAG,"ReadEnd");
+//        return viewport_data;
+//    }
+
     public void init(){
         sensorRegistered=false;
         sensorManager = (SensorManager) statusHelper.getContext()
@@ -70,9 +113,17 @@ public class SensorEventHandler implements SensorEventListener {
         if (sensorRot==null) return;
         sensorManager.registerListener(this, sensorRot, SensorManager.SENSOR_DELAY_GAME);
         sensorRegistered=true;
-
+        try {
+            fileInputStream = new FileInputStream(Environment.getExternalStorageDirectory().getCanonicalPath() + "/" + "mdata.csv");
+            in = new Scanner(fileInputStream);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+//
+//        vp_data = readCSV("mdata.csv");
+//        time = 0;
 //        initMyDataBase();
-        timer.schedule(timerTask,0,30);
+        timer.schedule(timerTask,0,100);
     }
 
     public void releaseResources(){
